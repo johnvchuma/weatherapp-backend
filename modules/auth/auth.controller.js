@@ -1,5 +1,6 @@
 const { getDb } = require("../../mongodb");
 const bcrypt = require("bcrypt");
+const { ObjectId } = require("mongodb");
 
 let db;
 const login = (req, res) => {
@@ -11,10 +12,7 @@ const login = (req, res) => {
       if (user) {
         bcrypt.compare(password, user.password).then((value) => {
           if (value) {
-            res.status(200).json({
-              status: true,
-              message: "Login successfully"
-            });
+            res.status(200).json(user);
           } else {
             res.status(403).json({
               status: false,
@@ -43,12 +41,34 @@ const register = (req, res) => {
   const { email, password, phone } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   db.collection("users")
-    .insertOne({ phone, email, password: hashedPassword })
-    .then((result) => {
-      res.status(200).json(result);
+    .findOne({ $or: [{ email }, { phone }] })
+    .then((user) => {
+      if (!user) {
+        db.collection("users")
+          .insertOne({ phone, email, password: hashedPassword })
+          .then((result) => {
+            db.collection("users")
+              .findOne({ _id: ObjectId(result.insertedId) })
+              .then((user) => {
+                res.status(200).json(user);
+              });
+          })
+          .catch((err) => {
+            res.status(500).json(err);
+          });
+      } else {
+        res.status(403).json({
+          status: false,
+          message: "User already exists"
+        });
+      }
     })
-    .catch((err) => {
-      res.status(500).json(err);
+    .catch((error) => {
+      res.status(500).json({
+        status: false,
+        message: "internal server error",
+        error
+      });
     });
 };
 
