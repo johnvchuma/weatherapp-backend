@@ -10,6 +10,9 @@ app.use(express.json());
 app.use("/questions", QuestionRoutes);
 app.use("/auth", AuthRoutes);
 app.use("/answers", AnswersRoutes);
+app.get("/", (req, res) => {
+  res.send("Server is working fine");
+});
 
 connectToDb((err) => {
   if (!err) {
