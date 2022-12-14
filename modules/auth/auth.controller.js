@@ -38,14 +38,14 @@ const login = (req, res) => {
 
 const register = (req, res) => {
   db = getDb();
-  const { email, password, phone } = req.body;
+  const { email, password, phone, userToken } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   db.collection("users")
     .findOne({ $or: [{ email }, { phone }] })
     .then((user) => {
       if (!user) {
         db.collection("users")
-          .insertOne({ phone, email, password: hashedPassword })
+          .insertOne({ phone, email, password: hashedPassword, userToken })
           .then((result) => {
             db.collection("users")
               .findOne({ _id: ObjectId(result.insertedId) })
