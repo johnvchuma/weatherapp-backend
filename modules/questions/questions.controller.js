@@ -58,17 +58,29 @@ const deleteQuestion = (req, res) => {
 const answeredQuestions = (req, res) => {
   db = getDb();
   const userId = req.params.userId;
+  let answers = [];
   let questionsId = [];
   let questions = [];
   db.collection("answers")
     .find({ userId })
-    .forEach((answer) => questionsId.push(ObjectId(answer.questionId)))
+    .forEach((answer) => {
+      answers.push(answer);
+      questionsId.push(ObjectId(answer.questionId));
+    })
     .then(() => {
       db.collection("questions")
         .find({ _id: { $in: questionsId } })
         .forEach((question) => questions.push(question))
         .then(() => {
-          res.status(200).json({ status: true, body: questions });
+          let joined = [];
+          answers.forEach((answer) => {
+            questions.forEach((question) => {
+              if (answer.questionId == question._id) {
+                joined.push({ question, answer });
+              }
+            });
+          });
+          res.status(200).json({ status: true, body: joined });
         })
         .catch((err) => {
           res.status(500).json({
