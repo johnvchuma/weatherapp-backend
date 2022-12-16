@@ -19,7 +19,7 @@ const addQuestion = (req, res) => {
   db = getDb();
   const { question } = req.body;
   db.collection("questions")
-    .insertOne({ question, answered: "false" })
+    .insertOne({ question, answered: false })
     .then((result) => {
       res.status(201).json(result);
     })
